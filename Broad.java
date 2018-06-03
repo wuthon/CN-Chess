@@ -9,6 +9,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
+
 import java.io.File;
 import java.util.TreeMap;
 
@@ -18,25 +19,32 @@ import javax.swing.JPanel;
  */
 public class Broad extends JPanel{
 	private static final long serialVersionUID = 1L;
+	final static int WIDTH=800,HEIGHT=900;//第一个棋子的xy坐标 后面的位置根据interval推出来		
+	final static int beginX=20,beginY=25,chessSize=80,interval=85;
+	
 	Image broadBackGround=getImage("/home/wuwang/Chess/SHEET.GIF");
 	Image pieceBorder=getImage("/home/wuwang/Chess/DELICATE/OOS.GIF");
 	
-	Ellipse2D[][] location=new Ellipse2D[10][9];//用于判断光标移动是否是有效位置
+	Ellipse2D[][] location=new Ellipse2D[10][9];//标记光标移动的有效位置
 	Piece[][] allPiece=new Piece[10][9];//所有棋子 image是未选中的样式 SImage是选中样式
 	int curX=-1,curY=-1;	
-	//第一个棋子的xy坐标 后面的位置根据interval推出来
-	final static int beginX=20,beginY=25,chessSize=80,interval=85;
-	
 	Rules rules;
+	
 	public Broad() {		
-		this.setSize(broadBackGround.getWidth(this),broadBackGround.getHeight(this));
+		setSize(broadBackGround.getWidth(this),broadBackGround.getHeight(this));
 		initPic();
 		rules=Rules.getRulesObj(allPiece);
 		addListen();
 	}
-	
-	
-	void initPic() {//初始化所有需要的图片
+		
+	void initPic() {//初始化一些需要的资源 如image.. 可以调用线程优化
+		//init location
+		for(int i=0;i<10;++i) {
+			for(int j=0;j<9;++j) 
+				location[i][j]=new Ellipse2D.Double
+				(beginX+j*interval,beginY+i*interval,chessSize,chessSize);
+		}
+		//init 	Image
 		for(int i=0;i<9;i+=2) {//卒
 			allPiece[6][i]=new Piece(getImage("/home/wuwang/Chess/DELICATE/RP.GIF"),
 					getImage("/home/wuwang/Chess/DELICATE/RPS.GIF"),"zu",true);
@@ -91,22 +99,19 @@ public class Broad extends JPanel{
 
 	@Override
 	public void paint(Graphics g) {
-		super.paint(g);//	boolean isSelected=false;
-		g.drawImage(broadBackGround, 0, 0, 800, 900, this);
-		for(int i=0;i<10;++i) {
-			for(int j=0;j<9;++j) 
-				location[i][j]=new Ellipse2D.Double(beginX+j*interval,beginY+i*interval,chessSize,chessSize);
-		}
-		drawPiece(g);
+		//super.paint(g);
+		g.drawImage(broadBackGround, 0, 0, WIDTH, HEIGHT, this);
+		drawAllPiece(g);
 	}
 	/**
 	 * 画所有Piece
 	 * @param g
 	 */
-	void drawPiece(Graphics g) {
+	void drawAllPiece(Graphics g) {
 		for(int i=0;i<10;++i) {
 			for(int j=0;j<9;++j) {
 				if(allPiece[i][j]!=null) {
+
 					if(curX==i&&curY==j) {
 						g.drawImage(allPiece[i][j].SImage, beginX+j*interval, beginY+i*interval,chessSize,chessSize,this);
 					}
@@ -128,36 +133,35 @@ public class Broad extends JPanel{
 		this.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) 
-			{
-				System.out.println("Clicked");
-				
-				
+			{								
 				if(e.getButton()==MouseEvent.BUTTON1) {
-					System.out.println("Clicked");
-					Pair p=contain(e.getPoint());				
+					Pair p=contain(e.getPoint());
+					if(p==null)
+						return ;
+					
 					if(curX!=-1&&curY!=-1) {
 						rules.move(curX, curY, p.x, p.y);
+						curX=-1;
+						curY=-1;
+						repaint();
 						return ;
-						//move(curX,curY,p.x,p.y);
-						//return ;
 					}
-					
-					if(p!=null&&allPiece[p.x][p.y]!=null) {
+									
+					if(allPiece[p.x][p.y]!=null) {
 						curX=p.x;
 						curY=p.y;
-						repaint();
 					}
 					else {
 						curX=-1;
 						curY=-1;
-						repaint();
 					}
 				}	
-				else if(e.getButton()==MouseEvent.BUTTON3){
+				else if(e.getButton()==MouseEvent.BUTTON3){//撤销选择
 					curX=-1;
 					curY=-1;
-					repaint();
+
 				}
+				repaint();
 			}
 	});		
 	this.addMouseMotionListener(new MouseMotionListener() {			
@@ -167,15 +171,14 @@ public class Broad extends JPanel{
 		@Override
 		public void mouseMoved(MouseEvent e) {
 			Pair p=contain(e.getPoint());
-			if(p!=null) {
+			if(p!=null&&allPiece[p.x][p.y]!=null) {
 				setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
 			}
 			else {
 				setCursor(Cursor.getDefaultCursor()); 	
 			}
-			}				
-		});					
-	}
+		}				
+	});	}
 	/**
 	 * 判断幕像素点是否在棋盘合法落子位置
 	 * @param p 屏幕x,y坐标 
