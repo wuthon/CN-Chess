@@ -20,12 +20,12 @@ public class Rules {
 	private Rules() {
 	}
 	public static Rules getRulesObj(Piece[][] arg0) {
-		if(allPiece==null)
-			allPiece=arg0;
+		allPiece=arg0;
 		return obj;
 	}
 	//x=-1 y=-1但不repaint 移动后
 	public void move(int oldx,int oldy,int newx,int newy) {
+		
 		//out of boundary
 		if(oldx<0||oldy<0||oldx>9||oldy>8)
 			return ;
@@ -39,16 +39,26 @@ public class Rules {
 		if(oldx==newx&&oldy==newy)
 			return ;
 		//move到己方棋子 无意义处理
-		if(allPiece[oldx][oldy].color==allPiece[newx][newy].color) {
+		if(allPiece[newx][newy]!=null&&allPiece[oldx][oldy].color==allPiece[newx][newy].color) {
 			return ;
 		}
-		if(find(pieceNext(oldx,oldy),newx,newy))
-			moveTo(newy, newy, newy, newy);
+
+		ArrayList<Pair> list=pieceNext(oldx,oldy);
+		if(list==null) {
+			return ;
+		}
+		for(Pair p:list) {
+			System.out.println("x:"+p.x+"\ty"+p.y);
+		}
+		if(find(list,newx,newy)) {	
+			moveTo(oldx, oldy, newx, newy);
+		}
 			
 	}
 	//类似C++的move语句  交换资源控制权而已  
 	//没有执行repaint!
 	void moveTo(int oldx,int oldy,int newx,int newy) {
+		System.out.println("x:"+oldx+"y:"+oldy+"\tmove"+"x"+newx+"y"+newy);
 		allPiece[newx][newy]=allPiece[oldx][oldy];
 		allPiece[oldx][oldy]=null;
 	}
@@ -71,6 +81,8 @@ public class Rules {
 	 * @return
 	 */
 	boolean find(ArrayList<Pair> list,int x,int y) {
+		if(list==null)
+			return false;
 		for(Pair p:list) {
 			if(p.x==x&&p.y==y)
 				return true;
@@ -83,16 +95,16 @@ public class Rules {
 		case "ju":	
 			return juNext(x,y);
 		case "ma":
-			break;
+			return maNext(x,y);
 		case "xiang":
-			break;
+			return xiangNext(x,y);
 		case "shi":
-			break;
+			return shiNext(x,y);
 		case "jiang":
-			break;
+			return jiangNext(x,y);
 		case "pao":
 			break;
-		case "bing":
+		case "zu":
 			break;
 		}		
 		return null;
@@ -102,7 +114,7 @@ public class Rules {
 	 * @param 判断p列是否越界
 	 * @return
 	 */
-	boolean isNotOutOFBoundaryColumns(int p) {
+	boolean isNotOutOFBoundaryColumn(int p) {
 		if(p<0||p>8)
 			return false;
 		return true;
@@ -117,12 +129,19 @@ public class Rules {
 			return false;
 		return true;
 	}
+	/**
+	 * 根据坐标预测下一步可走的范围
+	 * @param x 当前纵列x
+	 * @param y 当前纵列y
+	 * @param color 棋子红黑颜色不同范围
+	 * @return
+	 */
 	ArrayList<Pair> juNext(int x,int y) {
+		//有子 --》子的颜1色 相同？break：add
+		//无子 --》合法位置
 		//纵
 		ArrayList<Pair> next=new ArrayList<>();
-		for(int t=y+1;isNotOutOFBoundaryColumns(t);++t) {
-			//有子 --》子的颜色 相同？break：add
-			//无子 --》合法位置
+		for(int t=y+1;isNotOutOFBoundaryColumn(t);++t) {			
 			if(allPiece[x][t]==null)
 				next.add(new Pair(x,t));
 			else if(allPiece[x][t].color==allPiece[x][y].color) 
@@ -132,9 +151,7 @@ public class Rules {
 				break;
 			}
 		}
-		for(int t=y-1;isNotOutOFBoundaryColumns(t);--t) {
-			//有子 --》子的颜色 相同？break：add
-			//无子 --》合法位置
+		for(int t=y-1;isNotOutOFBoundaryColumn(t);--t) {
 			if(allPiece[x][t]==null)
 				next.add(new Pair(x,t));
 			else if(allPiece[x][t].color==allPiece[x][y].color) 
@@ -146,11 +163,9 @@ public class Rules {
 		}
 		//横
 		for(int t=x-1;isNotOutOFBoundaryLine(t);--t) {
-			//有子 --》子的颜色 相同？break：add
-			//无子 --》合法位置
 			if(allPiece[t][y]==null)
 				next.add(new Pair(t,y));
-			else if(allPiece[t][y].color==allPiece[t][y].color) 
+			else if(allPiece[t][y].color==allPiece[x][y].color) 
 				break;
 			else {
 				next.add(new Pair(t,y));
@@ -158,11 +173,11 @@ public class Rules {
 			}
 		}
 		for(int t=x+1;isNotOutOFBoundaryLine(t);++t) {
-			//有子 --》子的颜色 相同？break：add
-			//无子 --》合法位置
-			if(allPiece[t][y]==null)
+			if(allPiece[t][y]==null) {
 				next.add(new Pair(t,y));
-			else if(allPiece[t][y].color==allPiece[t][y].color) 
+				continue;
+				}
+			else if(allPiece[t][y].color==allPiece[x][y].color) 
 				break;
 			else {
 				next.add(new Pair(t,y));
@@ -171,31 +186,136 @@ public class Rules {
 		}
 		return next;
 	}
-	Pair[] maNext(int x,int y) {
-		
-		
-		
-		
-		return null;
+	ArrayList<Pair>  maNext(int x,int y) {	
+		ArrayList<Pair> next=new ArrayList<>();
+		boolean color=allPiece[x][y].color;
+		int[] nextX=new int[] {
+				-1,-2,-2,-1,1,2, 2, 1
+		};
+		int[] nextY=new int[] {
+				-2,-1, 1, 2,2,1,-1,-2
+		};
+		for(int i=0;i<8;++i) {
+			//out of boundary
+			int nextx=x+nextX[i],nexty=y+nextY[i];
+			if(isNotOutOFBoundaryLine(nextx)&&isNotOutOFBoundaryColumn(nexty))
+			{
+				if(allPiece[nextx][nexty]!=null&&color==allPiece[nextx][nexty].color)//equal color
+					continue;
+				//别马腿
+				if(nextX[i]==2&&allPiece[x+1][y]==null) {
+					next.add(new Pair(nextx,nexty));
+				}
+				else if(nextX[i]==-2&&allPiece[x-1][y]==null) {
+					next.add(new Pair(nextx,nexty));
+				}
+				else if(nextY[i]==2&&allPiece[x][y+1]==null) {
+					next.add(new Pair(nextx,nexty));
+				}
+				else if(nextY[i]==-2&&allPiece[x][y-1]==null) {
+					next.add(new Pair(nextx,nexty));
+				}							
+			}	
+		}
+		return next;
 	}
-	Pair[] xiangNext(int x,int y) {
-		return null;
-		
+	//可以写成lambda表达式
+	boolean xiangBoundaryOutOf(int x,int y,boolean color) {
+		//out of boundary
+		if(isNotOutOFBoundaryLine(x)&&isNotOutOFBoundaryColumn(y)) {
+			if(color) 
+				return x>4&&x<10;
+			else 
+				return y<5;
+		}
+		else return false;
 	}
-	Pair[] shiNext(int x,int y) {
-		return null;
-		
+	ArrayList<Pair> xiangNext(int x,int y) {
+		ArrayList<Pair> next=new ArrayList<>();
+		boolean color=allPiece[x][y].color;
+		int[] nextX=new int[] {
+			-2,-2,2, 2
+		};
+		int[] nextY=new int[] {
+			-2, 2,2,-2
+		};
+		int[] flagX=new int[4];
+		int[] flagY=new int[4];
+		for(int i=0;i<flagX.length;++i){
+			flagX[i]=nextX[i]/2;
+		}
+		for(int i=0;i<flagY.length;++i){
+			flagY[i]=nextY[i]/2;
+		}
+		for(int i=0;i<4;++i) {
+			int nextx=x+nextX[i],nexty=y+nextY[i];
+			if(xiangBoundaryOutOf(nextx,nexty,color)) {
+				if(allPiece[x+flagX[i]][y+flagY[i]]==null) {
+					next.add(new Pair(nextx,nexty));
+				}
+			}
+			
+		}	
+		return next;
 	}
-	Pair[] jiangNext(int x,int y) {
-		return null;
-		
+	boolean ScopeOfShiOrJiang(int x,int y,boolean color) {
+		//out of boundary
+		if(isNotOutOFBoundaryLine(x)&&isNotOutOFBoundaryColumn(y)&&y>2&&y<6) {
+			if(color) 
+				return x>6;
+			else 
+				return x<3;	
+		}
+		else return false;			
 	}
-	Pair[] paoNext(int x,int y) {
-		return null;
-		
+	ArrayList<Pair> shiNext(int x,int y) {
+		ArrayList<Pair> next=new ArrayList<>();
+		boolean color=allPiece[x][y].color;
+		int[] nextX=new int[] {
+			-1,-1,1, 1
+		};
+		int[] nextY=new int[] {
+			-1, 1,1,-1
+		};
+		for(int i=0;i<4;++i) {
+			int nextx=x+nextX[i],nexty=y+nextY[i];
+			if(ScopeOfShiOrJiang(nextx,nexty,color)) {
+				next.add(new Pair(nextx,nexty));
+			}
+		}
+		return next;
 	}
-	Pair[] zuNext(int x,int y) {
-		return null;
+	ArrayList<Pair> jiangNext(int x,int y) {
+		ArrayList<Pair> next=new ArrayList<>();
+		boolean color=allPiece[x][y].color;
+		int[] nextStep=new int[] {
+			-1,1
+		};
+		for(int i=0;i<2;++i) {
+			int nextx=x+nextStep[i];
+			if(ScopeOfShiOrJiang(nextx,y,color)) {
+				next.add(new Pair(nextx,y));
+			}
+		}
+		for(int i=0;i<2;++i) {
+			int nexty=y+nextStep[i];
+			if(ScopeOfShiOrJiang(x,nexty,color)) {
+				next.add(new Pair(x,nexty));
+			}
+		}
+		return next;
+	}
+	ArrayList<Pair> paoNext(int x,int y) {
+		ArrayList<Pair> next=new ArrayList<>();
+		
+		
+		return next;		
+	}
+	ArrayList<Pair> zuNext(int x,int y) {
+		ArrayList<Pair> next=new ArrayList<>();
+		
+		
+		return next;
 		
 	}
 }
