@@ -2,8 +2,6 @@ package XiangQi;
 
 import java.awt.Point;
 import java.awt.geom.Ellipse2D;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 /**
@@ -31,13 +29,9 @@ public class Rules {
 		if(!(isNotOutOFBoundaryLine(oldx)&&isNotOutOFBoundaryLine(newx)))
 			return ;
 		if(!(isNotOutOFBoundaryColumn(oldy)&&isNotOutOFBoundaryColumn(newy)))
-			return ;			//有子 --》子的颜1色 相同？break：add
-		//无子 --》合法位置
-		//纵
-		//null pointer
-		if(allPiece[oldx][oldy]==null) {
+			return ;			
+		if(allPiece[oldx][oldy]==null) 
 			return ;
-		}
 		//move棋子自身移动到自身  无意义
 		if(oldx==newx&&oldy==newy)
 			return ;
@@ -166,54 +160,42 @@ public class Rules {
 	 * @param color 棋子红黑颜色不同范围
 	 * @return
 	 */
+	void addJuNextC(ArrayList<Pair> next,int x,int y,int t) {		
+		for(;isNotOutOFBoundaryColumn(t);) {			
+			if(allPiece[x][t]==null)
+				next.add(new Pair(x,t));
+			else if(allPiece[x][t].color==allPiece[x][y].color)//同色
+				break;
+			else {
+				next.add(new Pair(x,t));
+				break;
+			}
+			if(t>y)		++t;
+			else		--t;
+		}	
+	}
+	void addJuNextL(ArrayList<Pair> next,int x,int y,int t) {
+		for(;isNotOutOFBoundaryLine(t);) {
+			if(allPiece[t][y]==null) 
+				next.add(new Pair(t,y));
+			else if(allPiece[t][y].color==allPiece[x][y].color) 
+				break;
+			else {
+				next.add(new Pair(t,y));
+				break;
+			}
+			if(t>x)		++t;
+			else		--t;
+		}	
+	}
 	ArrayList<Pair> juNext(int x,int y) {
-		//有子 --》子的颜1色 相同？break：add
-		//无子 --》合法位置
-		//纵
 		ArrayList<Pair> next=new ArrayList<>();
-		for(int t=y+1;isNotOutOFBoundaryColumn(t);++t) {			
-			if(allPiece[x][t]==null)
-				next.add(new Pair(x,t));
-			else if(allPiece[x][t].color==allPiece[x][y].color) 
-				break;
-			else {
-				next.add(new Pair(x,t));
-				break;
-			}
-		}
-		for(int t=y-1;isNotOutOFBoundaryColumn(t);--t) {
-			if(allPiece[x][t]==null)
-				next.add(new Pair(x,t));
-			else if(allPiece[x][t].color==allPiece[x][y].color) 
-				break;
-			else {
-				next.add(new Pair(x,t));
-				break;
-			}
-		}
-		//横
-		for(int t=x-1;isNotOutOFBoundaryLine(t);--t) {
-			if(allPiece[t][y]==null)
-				next.add(new Pair(t,y));
-			else if(allPiece[t][y].color==allPiece[x][y].color) 
-				break;
-			else {
-				next.add(new Pair(t,y));
-				break;
-			}
-		}
-		for(int t=x+1;isNotOutOFBoundaryLine(t);++t) {
-			if(allPiece[t][y]==null) {
-				next.add(new Pair(t,y));
-				continue;
-				}
-			else if(allPiece[t][y].color==allPiece[x][y].color) 
-				break;
-			else {
-				next.add(new Pair(t,y));
-				break;
-			}
-		}
+		//列
+		addJuNextC(next,x,y,y+1);
+		addJuNextC(next,x,y,y-1);
+		//行
+		addJuNextL(next,x,y,x+1);
+		addJuNextL(next,x,y,x-1);
 		return next;
 	}
 	ArrayList<Pair>  maNext(int x,int y) {	
@@ -249,7 +231,13 @@ public class Rules {
 		}
 		return next;
 	}
-	//可以写成lambda表达式
+	/**
+	 * 象的范围
+	 * @param x
+	 * @param y
+	 * @param color
+	 * @return
+	 */
 	boolean xiangBoundaryOutOf(int x,int y,boolean color) {
 		//out of boundary
 		if(isNotOutOFBoundaryLine(x)&&isNotOutOFBoundaryColumn(y)) {
@@ -279,15 +267,21 @@ public class Rules {
 		}
 		for(int i=0;i<4;++i) {
 			int nextx=x+nextX[i],nexty=y+nextY[i];
-			if(xiangBoundaryOutOf(nextx,nexty,color)) {
-				if(allPiece[x+flagX[i]][y+flagY[i]]==null) {
-					next.add(new Pair(nextx,nexty));
-				}
+			if(xiangBoundaryOutOf(nextx,nexty,color)&&
+					allPiece[x+flagX[i]][y+flagY[i]]==null) {
+				next.add(new Pair(nextx,nexty));
 			}
 			
 		}	
 		return next;
 	}
+	/**
+	 * 士和将范围
+	 * @param x
+	 * @param y
+	 * @param color
+	 * @return
+	 */
 	boolean ScopeOfShiOrJiang(int x,int y,boolean color) {
 		//out of boundary
 		if(isNotOutOFBoundaryLine(x)&&isNotOutOFBoundaryColumn(y)&&y>2&&y<6) {
@@ -347,93 +341,46 @@ public class Rules {
 		}
 		return next;
 	}
-	//写成lambda表达式就更好一些 就像C++lambda函数  可以共享局部变量  就不需要传这么多参了
-	void addToNext(ArrayList<Pair> next,Method isOut ,int a,int b,boolean plus,boolean color) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		for(;(boolean)isOut.invoke(a);) {
-			if(allPiece[a][b]==null) {
-				next.add(new Pair(a,b));	
+	void addPaoNextStepsL(ArrayList<Pair> next,int t,int a,boolean plus,boolean color) {
+		for(;isNotOutOFBoundaryLine(t);) {
+			if(allPiece[t][a]==null) 
+				next.add(new Pair(t,a));	
+			else
+			{//遇到棋子 往棋子上方继续寻找可以吃子的位置
+				for(t=plus?t+1:t-1;isNotOutOFBoundaryLine(t);t=plus?t+1:t-1) {
+					if(allPiece[t][a]!=null&&allPiece[t][a].color!=color) {
+						next.add(new Pair(t,a));
+						break;
+					}					
+				}			
+			}
+			t=plus?t+1:t-1;
+		}
+	}
+	void addPaoNextStepsC(ArrayList<Pair> next,int t,int a,boolean plus,boolean color) {
+		for(;isNotOutOFBoundaryColumn(t);) {
+			if(allPiece[a][t]==null) {
+				next.add(new Pair(a,t));	
 			}
 			else
-			{	//遇到棋子 往棋子上方继续寻找可以吃子的位置
-				if(plus) 
-					++a;
-				else 
-					--a;
-				for(;(boolean)isOut.invoke(a);) {
-					if(allPiece[a][b]!=null&&allPiece[a][b].color!=color) {
-						next.add(new Pair(a,b));
+			{//遇到棋子 往棋子上方继续寻找可以吃子的位置
+				for(t=plus?t+1:t-1;isNotOutOFBoundaryColumn(t);t=plus?t+1:t-1) {
+					if(allPiece[a][t]!=null&&allPiece[a][t].color!=color) {
+						next.add(new Pair(a,t));
 						break;
 					}					
 				}
 			}
-			if(plus) 
-				++a;
-			else 
-				--a;			
+			t=plus?t+1:t-1;
 		}
-				
-	}
+	}	
 	ArrayList<Pair> paoNext(int x,int y) {
 		ArrayList<Pair> next=new ArrayList<>();
 		boolean color=allPiece[x][y].color;
-		//代码可以复写是最好的  但是这一块代码 看起来可以抽出来复写  但是实际上抽出来还是比较麻烦 
-		//但是四处代码  抽成不同的两份 是可以的
-		for(int t=x-1;isNotOutOFBoundaryLine(t);--t) {
-			if(allPiece[t][y]==null) {
-				next.add(new Pair(t,y));	
-			}
-			else
-			{//遇到棋子 往棋子上方继续寻找可以吃子的位置
-				for(--t;isNotOutOFBoundaryLine(t);--t) {
-					if(allPiece[t][y]!=null&&allPiece[t][y].color!=color) {
-						next.add(new Pair(t,y));
-						break;
-					}					
-				}
-			}
-		}
-		for(int t=x+1;isNotOutOFBoundaryLine(t);++t) {
-			if(allPiece[t][y]==null) {
-				next.add(new Pair(t,y));	
-			}
-			else
-			{//遇到棋子 往棋子上方继续寻找可以吃子的位置
-				for(++t;isNotOutOFBoundaryLine(t);++t) {
-					if(allPiece[t][y]!=null&&allPiece[t][y].color!=color) {
-						next.add(new Pair(t,y));
-						break;
-					}					
-				}
-			}
-		}
-		for(int t=y-1;isNotOutOFBoundaryColumn(t);--t) {
-			if(allPiece[x][t]==null) {
-				next.add(new Pair(x,t));	
-			}
-			else
-			{//遇到棋子 往棋子上方继续寻找可以吃子的位置
-				for(--t;isNotOutOFBoundaryColumn(t);--t) {
-					if(allPiece[x][t]!=null&&allPiece[x][t].color!=color) {
-						next.add(new Pair(x,t));
-						break;
-					}					
-				}
-			}
-		}
-		for(int t=y+1;isNotOutOFBoundaryColumn(t);++t) {
-			if(allPiece[x][t]==null) {
-				next.add(new Pair(x,t));	
-			}
-			else
-			{//遇到棋子 往棋子上方继续寻找可以吃子的位置
-				for(++t;isNotOutOFBoundaryColumn(t);++t) {
-					if(allPiece[x][t]!=null&&allPiece[x][t].color!=color) {
-						next.add(new Pair(x,t));
-						break;
-					}					
-				}
-			}
-		}
+		addPaoNextStepsL(next,x-1,y,false,color);
+		addPaoNextStepsL(next,x+1,y,true,color);
+		addPaoNextStepsC(next,y-1,x,false,color);
+		addPaoNextStepsC(next,y+1,x,true,color);
 		return next;		
 	}
 	void addZuNextSteps(ArrayList<Pair> next,int x,int y) {
