@@ -1,4 +1,4 @@
-void initPic() {//初始化一些需要的资源 如image.. 可以调用线程优化
+	void initPic() {//初始化一些需要的资源 如image.. 可以调用线程优化
 		//init location
 		for(int i=0;i<10;++i) {
 			for(int j=0;j<9;++j) 
@@ -45,3 +45,15 @@ void initPic() {//初始化一些需要的资源 如image.. 可以调用线程�
 				}			
 			}
 		}					
+		String[] attrs=new String[] {
+			"ju","ma","xiang","shi","jiang"
+		};
+		for(int i=0;i<5;++i) {
+			allPiece[0][i]=new Piece(blackN.get(attrs[i]),blackS.get(attrs[i]),attrs[i],false);
+			allPiece[9][i]=new Piece(redN.get(attrs[i]),redS.get(attrs[i]),attrs[i],true);		
+		}
+		for(int i=0;i<4;++i) {
+			allPiece[0][8-i]=allPiece[0][i];
+			allPiece[9][8-i]=allPiece[9][i]	;			
+		}
+	}
