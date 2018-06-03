@@ -2,7 +2,6 @@ package XiangQi;
 
 import java.awt.Image;
 /**
- * 
  * @author wuwang
  */
 public class Piece {
@@ -10,6 +9,7 @@ public class Piece {
 	Image image,SImage;//image是未选中的样式 SImage是选中后的样式
 	boolean color=true;//标记颜色 true红 false黑
 	String attr;//棋子角色属性
+	
 	public Piece(Image i,Image s) {
 		image=i;
 		SImage=s;
