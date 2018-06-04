@@ -1,21 +1,19 @@
 package XiangQi;
 
-import java.awt.Point;
-import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
+import java.util.Stack;
 
 /**
  * 表述游戏规则部分
  * 界面与规则处理分离,不然Broad就显得冗长
  * @author wuwang
  */
-/*问题来了 悔棋怎么写？
- */
 
 public class Rules {
 	private static Rules obj=new Rules();
-	Ellipse2D[][] allLocation;
 	static Piece[][] allPiece;
+	Stack<Step> history=new Stack<>();//记录历史Step  
+	Stack<Piece> pieceHistory=new Stack<>();//记录被覆盖的棋子
 	private Rules() {
 	}
 	public static Rules getRulesObj(Piece[][] arg0) {
@@ -24,7 +22,6 @@ public class Rules {
 	}
 	//x=-1 y=-1但不repaint 移动后
 	public void move(int oldx,int oldy,int newx,int newy) {
-		
 		//out of boundary
 		if(!(isNotOutOFBoundaryLine(oldx)&&isNotOutOFBoundaryLine(newx)))
 			return ;
@@ -46,10 +43,58 @@ public class Rules {
 		
 	//类似C++的move语句  交换资源控制权而已  
 	//没有执行repaint!
-	void moveTo(int oldx,int oldy,int newx,int newy) {
+	void moveTo(int oldx,int oldy,int newx,int newy) {	
+		if(allPiece[newx][newy]!=null) {//记录每一次移动
+			System.out.println("not null");
+			history.push(new Step(new Pair(oldx,oldy),new Pair(newx,newy),true));
+			pieceHistory.push(allPiece[newx][newy]);
+		}
+		else 
+			history.push(new Step(new Pair(oldx,oldy),new Pair(newx,newy)));
+		
+		swap(oldx, oldy, newx, newy);
+	}
+	int getStepsNum() {
+		return history.size();
+	}
+	void swap(int oldx,int oldy,int newx,int newy) {
 		System.out.println("x:"+oldx+"y:"+oldy+"\tmove"+"x"+newx+"y"+newy);
 		allPiece[newx][newy]=allPiece[oldx][oldy];
 		allPiece[oldx][oldy]=null;
+	}
+	/**
+	 * 
+	 * @param num 后退num步棋
+	 */
+	public void retreat(int num) {
+		while(num--!=0) 
+			retreat();
+	}
+	//只后退一步棋
+	void retreat() {
+		if(!history.isEmpty()) {
+			Step step=history.pop();
+			swap(step.getSecond().x,step.getSecond().y,step.getFirst().x,step.getFirst().y);
+			allPiece[step.getSecond().x][step.getSecond().y]=null;
+			if(step.isCovered) {
+				System.out.println("run");
+				assert(!pieceHistory.isEmpty()):"pieceHistory data exception";
+				allPiece[step.getSecond().x][step.getSecond().y]=pieceHistory.pop();
+			}		
+		}
+		
+	}
+	/**
+	 * 判定胜负
+	 * @return  0是双方未发生输赢 1是黑胜 2是红胜
+	 */
+	int isWon() {
+		if(find("jiang",true)==null)
+			return 1;
+		else if((find("jiang",false)==null))
+			return 2;
+		else 
+			return 0;
 	}
 	/**
 	 * 打印list中的所有steps
@@ -78,15 +123,6 @@ public class Rules {
 		}
 		return null;
 	}
-	Pair contain(Point p) {
-		for(int i=0;i<10;++i) {
-			for(int j=0;j<9;++j) {
-				if(allLocation[i][j].contains(p.getX(), p.getY())) 
-					return new Pair(i, j);
-			}
-		}		
-		return null;
-	}
 	/**
 	 * 提供矩阵x,y位置的Piece,预测其下一步可以走的位置
 	 * @param x 
@@ -102,18 +138,6 @@ public class Rules {
 		}
 		return false;
 	} 
-	/**
-	 * 判定胜负
-	 * @return  0是双方未发生输赢 1是黑胜 2是红胜
-	 */
-	int isWon() {
-		if(find("jiang",true)==null)
-			return 1;
-		else if((find("jiang",false)==null))
-			return 2;
-		else 
-			return 0;
-	}
 	ArrayList<Pair>  pieceNext(int x,int y){
 		switch(allPiece[x][y].attr) {
 		case "ju":	
