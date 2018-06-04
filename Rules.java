@@ -58,7 +58,6 @@ public class Rules {
 	//没有执行repaint!
 	void moveTo(int oldx,int oldy,int newx,int newy) {	
 		if(allPiece[newx][newy]!=null) {//记录每一次移动
-			System.out.println("not null");
 			history.push(new Step(new Pair(oldx,oldy),new Pair(newx,newy),true));
 			pieceHistory.push(allPiece[newx][newy]);
 		}
@@ -72,7 +71,7 @@ public class Rules {
 	}
 	//类似C++的move语句  交换资源控制权而已  
 	void swap(int oldx,int oldy,int newx,int newy) {
-		System.out.println("x:"+oldx+"y:"+oldy+"\tmove"+"x"+newx+"y"+newy);
+		System.out.println("x:"+oldx+" y:"+oldy+"\t move"+" x"+newx+" y"+newy);
 		allPiece[newx][newy]=allPiece[oldx][oldy];
 		allPiece[oldx][oldy]=null;
 	}
