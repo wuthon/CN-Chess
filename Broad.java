@@ -7,9 +7,10 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Ellipse2D;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.TreeMap;
 
 import javax.swing.JOptionPane;
@@ -110,10 +111,8 @@ public class Broad extends JPanel{
 		repaint();
 	}
 	public void newGame() {
-		//allPiece=new Piece[10][9];
 		rules.retreat(rules.getStepsNum());
-		curX=-1;
-		curY=-1;
+		setUnSelected();
 		repaint();
 	}
 	public void retreat() {
@@ -134,10 +133,10 @@ public class Broad extends JPanel{
 		for(int i=0;i<10;++i) {
 			for(int j=0;j<9;++j) {
 				if(allPiece[i][j]!=null) {
-					if(curX==i&&curY==j) {
+					if(curX==i&&curY==j) {//棋子选定状态style
 						g.drawImage(allPiece[i][j].SImage, beginX+j*interval, beginY+i*interval,chessSize,chessSize,this);
 					}
-					else {
+					else {//棋子非选定状态的style
 						g.drawImage(allPiece[i][j].image, beginX+j*interval, beginY+i*interval,chessSize,chessSize,this);
 					}
 				}
@@ -157,9 +156,12 @@ public class Broad extends JPanel{
 			{								
 				if(e.getButton()==MouseEvent.BUTTON1) {
 					Pair p=contain(e.getPoint());
-					if(p==null)
+					if(p==null) {
+						setUnSelected();
 						return ;
-					if(curX!=-1&&curY!=-1) {
+					}
+					if(curX!=-1&&curY!=-1) {//已经选择棋子状态
+						//同色之间直接切换
 						if(allPiece[p.x][p.y]!=null&&allPiece[p.x][p.y].color==allPiece[curX][curY].color) {
 							curX=p.x;
 							curY=p.y;						
@@ -167,15 +169,12 @@ public class Broad extends JPanel{
 						else {
 							rules.move(curX, curY, p.x, p.y);
 							repaint();
-							curX=-1;
-							curY=-1;
+							setUnSelected();
 							int result=rules.isWon();
 							if(result==2)
-								JOptionPane.showMessageDialog(Broad.this,
-										"<html><b><font size=11>红方胜</font></b></html>", "game over", JOptionPane.YES_OPTION);
+								showYesMessage("红方胜","Game OVer");
 							else if(result==1)
-								JOptionPane.showMessageDialog(Broad.this,
-										"<html><b><font size=11>黑方胜</font></b></html>", "game over", JOptionPane.YES_OPTION);
+								showYesMessage("黑方胜","Game OVer");
 							return ;
 						}
 					}							
@@ -183,33 +182,36 @@ public class Broad extends JPanel{
 						curX=p.x;
 						curY=p.y;
 					}
-					else {
-						curX=-1;
-						curY=-1;
-					}
+					else setUnSelected();					
 				}	
-				else if(e.getButton()==MouseEvent.BUTTON3){//撤销选择
-					curX=-1;
-					curY=-1;
-				}
+				else if(e.getButton()==MouseEvent.BUTTON3)//撤销选择
+					setUnSelected();				
 				repaint();
 			}
-	});		
-	this.addMouseMotionListener(new MouseMotionListener() {			
+	});
+
+	this.addMouseMotionListener(new MouseMotionAdapter() {			
 		@Override
-		public void mouseDragged(MouseEvent e) {	
-		}
-		@Override
-		public void mouseMoved(MouseEvent e) {
+		public void mouseMoved(MouseEvent e) {//改变光标style
 			Pair p=contain(e.getPoint());
-			if(p!=null&&allPiece[p.x][p.y]!=null) {
-				setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+			if(p!=null) {
+				if(curX!=-1&&curY!=-1) {//已选择 下一步落子选择时光标
+					if(allPiece[curX][curY]!=null) {
+						ArrayList<Pair> next=rules.pieceNext(curX, curY);
+						for(Pair pair:next) 
+							if(pair.equals(p))//if(pair.x==p.x&&pair.y==p.y) 
+								setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));						
+					
+					}
+				}//未选择落子光标
+				else if(allPiece[p.x][p.y]!=null) 
+					setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			}
-			else {
+			else 
 				setCursor(Cursor.getDefaultCursor()); 	
-			}
 		}				
-	});	}
+	});	
+	}
 	/**
 	 * 判断幕像素点是否在棋盘合法落子位置
 	 * @param p 屏幕x,y坐标 
@@ -225,5 +227,14 @@ public class Broad extends JPanel{
 		}		
 		return null;
 	}
-	
+	void setUnSelected() {
+		curX=-1;
+		curY=-1;
+	}
+	void showYesMessage(String str,String title) {
+		JOptionPane.showMessageDialog(Broad.this,
+				"<html><b><font size=11>"+str+"</font></b></html>", 
+				title, 
+				JOptionPane.YES_OPTION);
+	}
 }
