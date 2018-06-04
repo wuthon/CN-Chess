@@ -36,36 +36,37 @@ public class Broad extends JPanel{
 	
 	public Broad() {		
 		setSize(broadBackGround.getWidth(this),broadBackGround.getHeight(this));
-		new Thread(()->initPic()).start();
+		new Thread(()->initPic("/home/wuwang/Chess/POLISH")).start();
+		new Thread(()->initEllipse()).start();
 		rules=Rules.getRulesObj(allPiece);
 		addListen();
 	}
-		
-	void initPic() {//初始化一些需要的资源 如image.. 可以调用线程优化
-		//init location
+	void initEllipse() {
 		for(int i=0;i<10;++i) {
 			for(int j=0;j<9;++j) 
 				location[i][j]=new Ellipse2D.Double
 				(beginX+j*interval,beginY+i*interval,chessSize,chessSize);
 		}
+	}
+	void initPic(String path) {//初始化一些需要的资源 如image.. 调用线程优化
 		//init 	Image
 		for(int i=0;i<9;i+=2) {//卒
-			allPiece[6][i]=new Piece(getImage("/home/wuwang/Chess/DELICATE/RP.GIF"),
-					getImage("/home/wuwang/Chess/DELICATE/RPS.GIF"),"zu",true);
-			allPiece[3][i]=new Piece(getImage("/home/wuwang/Chess/DELICATE/BP.GIF"),
-					getImage("/home/wuwang/Chess/DELICATE/BPS.GIF"),"zu",false);		
+			allPiece[6][i]=new Piece(getImage(path+"/RP.GIF"),
+					getImage(path+"/RPS.GIF"),"zu",true);
+			allPiece[3][i]=new Piece(getImage(path+"/BP.GIF"),
+					getImage(path+"/BPS.GIF"),"zu",false);		
 		}
 		for(int i=1;i<9;i+=6) {//炮
-			allPiece[7][i]=new Piece(getImage("/home/wuwang/Chess/DELICATE/RC.GIF"),
-					getImage("/home/wuwang/Chess/DELICATE/RCS.GIF"),"pao",true);
-			allPiece[2][i]=new Piece(getImage("/home/wuwang/Chess/DELICATE/BC.GIF"),
-					getImage("/home/wuwang/Chess/DELICATE/BCS.GIF"),"pao",false);		
+			allPiece[7][i]=new Piece(getImage(path+"/RC.GIF"),
+					getImage(path+"/RCS.GIF"),"pao",true);
+			allPiece[2][i]=new Piece(getImage(path+"/BC.GIF"),
+					getImage(path+"/BCS.GIF"),"pao",false);		
 		}
 		//建立map 保存name-image
 		TreeMap<String,Image> redN=new TreeMap<>(),redS=new TreeMap<>(),
 							  blackN=new TreeMap<>(),blackS=new TreeMap<>();	
 		//根目录下四个子目录 子目录1,2,3,4保存不同类型的Image
-		File file=new File("/home/wuwang/Chess/DELICATE/Chess");		
+		File file=new File(path+"/Chess");		
 		File[] dir=file.listFiles();
 		for(int i=0;i<4;++i) {
 			File[] files=dir[i].listFiles();
@@ -100,7 +101,25 @@ public class Broad extends JPanel{
 			allPiece[9][8-i]=allPiece[9][i]	;			
 		}
 	}
-
+	public void setBackground(String str) {
+		broadBackGround=getImage(str);
+		repaint();
+	}
+	public void setPiece(String path) {
+		initPic(path);
+		repaint();
+	}
+	public void newGame() {
+		//allPiece=new Piece[10][9];
+		rules.retreat(rules.getStepsNum());
+		curX=-1;
+		curY=-1;
+		repaint();
+	}
+	public void retreat() {
+		rules.retreat(1);
+		repaint();
+	}
 	@Override
 	public void paint(Graphics g) {
 		//super.paint(g);
@@ -115,7 +134,6 @@ public class Broad extends JPanel{
 		for(int i=0;i<10;++i) {
 			for(int j=0;j<9;++j) {
 				if(allPiece[i][j]!=null) {
-
 					if(curX==i&&curY==j) {
 						g.drawImage(allPiece[i][j].SImage, beginX+j*interval, beginY+i*interval,chessSize,chessSize,this);
 					}
@@ -142,18 +160,24 @@ public class Broad extends JPanel{
 					if(p==null)
 						return ;
 					if(curX!=-1&&curY!=-1) {
-						rules.move(curX, curY, p.x, p.y);
-						repaint();
-						curX=-1;
-						curY=-1;
-						int result=rules.isWon();
-						if(result==2)
-							JOptionPane.showMessageDialog(Broad.this,
-									"<html><b><font size=11>红方胜</font></b></html>", "game over", JOptionPane.YES_OPTION);
-						else if(result==1)
-							JOptionPane.showMessageDialog(Broad.this,
-									"<html><b><font size=11>黑方胜</font></b></html>", "game over", JOptionPane.YES_OPTION);
-						return ;
+						if(allPiece[p.x][p.y]!=null&&allPiece[p.x][p.y].color==allPiece[curX][curY].color) {
+							curX=p.x;
+							curY=p.y;						
+						}
+						else {
+							rules.move(curX, curY, p.x, p.y);
+							repaint();
+							curX=-1;
+							curY=-1;
+							int result=rules.isWon();
+							if(result==2)
+								JOptionPane.showMessageDialog(Broad.this,
+										"<html><b><font size=11>红方胜</font></b></html>", "game over", JOptionPane.YES_OPTION);
+							else if(result==1)
+								JOptionPane.showMessageDialog(Broad.this,
+										"<html><b><font size=11>黑方胜</font></b></html>", "game over", JOptionPane.YES_OPTION);
+							return ;
+						}
 					}							
 					if(allPiece[p.x][p.y]!=null) {
 						curX=p.x;
