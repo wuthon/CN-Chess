@@ -1,5 +1,11 @@
 package XiangQi;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Stack;
 
@@ -20,7 +26,14 @@ public class Rules {
 		allPiece=arg0;
 		return obj;
 	}
-	//x=-1 y=-1但不repaint 移动后
+	/**
+	 * 移动坐标(oldx,oldy)的棋子(newx,newy)
+	 * 如果位置不合法不予理会
+	 * @param oldx
+	 * @param oldy
+	 * @param newx
+	 * @param newy
+	 */
 	public void move(int oldx,int oldy,int newx,int newy) {
 		//out of boundary
 		if(!(isNotOutOFBoundaryLine(oldx)&&isNotOutOFBoundaryLine(newx)))
@@ -41,7 +54,7 @@ public class Rules {
 			moveTo(oldx, oldy, newx, newy);
 	}
 		
-	//类似C++的move语句  交换资源控制权而已  
+
 	//没有执行repaint!
 	void moveTo(int oldx,int oldy,int newx,int newy) {	
 		if(allPiece[newx][newy]!=null) {//记录每一次移动
@@ -57,6 +70,7 @@ public class Rules {
 	int getStepsNum() {
 		return history.size();
 	}
+	//类似C++的move语句  交换资源控制权而已  
 	void swap(int oldx,int oldy,int newx,int newy) {
 		System.out.println("x:"+oldx+"y:"+oldy+"\tmove"+"x"+newx+"y"+newy);
 		allPiece[newx][newy]=allPiece[oldx][oldy];
@@ -85,16 +99,52 @@ public class Rules {
 		
 	}
 	/**
+	 * 讲对局棋谱写到本地
+	 * @param path
+	 * @throws FileNotFoundException
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
+	void readChess(String path) throws FileNotFoundException, ClassNotFoundException, IOException {	
+		ObjectInputStream in=new ObjectInputStream(new FileInputStream(path));		
+		retreat(history.size());
+		Object obj=null;
+		while((obj=in.readObject())!=null) {
+			Step step=(Step)obj;
+			System.out.printf("%d %d %d %d \n",step.first.x,step.first.y,step.second.x,step.second.y);
+			move(step.first.x,step.first.y,step.second.x,step.second.y);
+		}
+		in.close();
+	}
+	/**
+	 * 从指定path读取棋谱到当前棋局
+	 * @param path
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	void writeChess(String path) throws FileNotFoundException, IOException {
+		ObjectOutputStream out=new ObjectOutputStream(new FileOutputStream(path,true));
+		for(int i=0,len=history.size();i<len;++i) {
+			out.writeObject(history.get(i));
+		}
+		out.writeObject(null);//写一个null 作为结束的flag
+		out.flush();
+		out.close();
+	}
+	/**
 	 * 判定胜负
+	 * 从pieceHistory已被覆盖的棋子中寻找
 	 * @return  0是双方未发生输赢 1是黑胜 2是红胜
 	 */
 	int isWon() {
-		if(find("jiang",true)==null)
-			return 1;
-		else if((find("jiang",false)==null))
-			return 2;
-		else 
-			return 0;
+		for(int i=0,len=pieceHistory.size();i<len;++i)
+		{
+			if(pieceHistory.get(i).attr.equals("jiang")&&pieceHistory.get(i).color==true)
+				return 1;
+			else if(pieceHistory.get(i).attr.equals("jiang")&&pieceHistory.get(i).color==false)
+				return 2;
+		}
+		return 0;
 	}
 	/**
 	 * 打印list中的所有steps
@@ -123,21 +173,21 @@ public class Rules {
 		}
 		return null;
 	}
+	boolean find(ArrayList<Pair> list,int x,int y) {
+		if(list==null)
+			return false;
+		for(Pair p:list) {
+			if(p.equals(x,y))
+				return true;
+		}
+		return false;
+	} 
 	/**
 	 * 提供矩阵x,y位置的Piece,预测其下一步可以走的位置
 	 * @param x 
 	 * @param y
 	 * @return
 	 */
-	boolean find(ArrayList<Pair> list,int x,int y) {
-		if(list==null)
-			return false;
-		for(Pair p:list) {
-			if(p.x==x&&p.y==y)
-				return true;
-		}
-		return false;
-	} 
 	ArrayList<Pair>  pieceNext(int x,int y){
 		switch(allPiece[x][y].attr) {
 		case "ju":	
