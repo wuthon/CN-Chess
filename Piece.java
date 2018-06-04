@@ -46,15 +46,25 @@ class Step implements Serializable{
 		return isCovered;
 	}
 }
-class Pair{
+ 
+class Pair implements Serializable{
+	private static final long serialVersionUID = 1L;
 	int x,y;
 	public Pair(int argx,int argy) {
 		x=argx;
 		y=argy;
 	}
+	public boolean equals(int argx,int argy) {
+		return x==argx&&y==argy;
+	}
 	@Override
 	public boolean equals(Object obj) {
-		//待补
-		return false;
+		if(obj==null||obj.getClass()!=Pair.class) 
+			return false;
+		Pair p=(Pair)obj;
+		if(p.x==x&&p.y==y)
+			return true;
+		else 
+			return false;
 	}
 }
