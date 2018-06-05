@@ -28,6 +28,7 @@ public class Run {
 class Game extends JFrame{
 	private static final long serialVersionUID = 1L;
 	//path
+
 	String path="/home/wuwang/Chess";
 	String[] piece=new String[2];
 	ArrayList<String> allBackground=new ArrayList<>();
