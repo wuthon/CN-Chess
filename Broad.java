@@ -24,22 +24,26 @@ import javax.swing.JPanel;
  */
 public class Broad extends JPanel{
 	private static final long serialVersionUID = 1L;
-	final static int WIDTH=800,HEIGHT=900;//第一个棋子的xy坐标 后面的位置根据interval推出来		
+/**第一个棋子的xy坐标 后面的位置根据interval推出来 */
+	final static int WIDTH=800,HEIGHT=900;	
 	final static int beginX=20,beginY=25,chessSize=80,interval=85;
 	
 	Image broadBackGround=getImage("/home/wuwang/Chess/SHEET.GIF");
 	Image pieceBorder=getImage("/home/wuwang/Chess/DELICATE/OOS.GIF");
-	
-	Ellipse2D[][] location=new Ellipse2D[10][9];//标记光标移动的有效位置
-	Piece[][] allPiece=new Piece[10][9];//所有棋子 image是未选中的样式 SImage是选中样式
+/**标记光标移动的有效位置*/
+	Ellipse2D[][] location=new Ellipse2D[10][9];
+/**所有棋子 image是未选中的样式 SImage是选中样式 */
+	Piece[][] allPiece=new Piece[10][9];
 	int curX=-1,curY=-1;	
 	Rules rules;
 	
+	AI ai;
 	public Broad() {		
 		setSize(broadBackGround.getWidth(this),broadBackGround.getHeight(this));
 		new Thread(()->initPic("/home/wuwang/Chess/POLISH")).start();
 		new Thread(()->initEllipse()).start();
 		rules=Rules.getRulesObj(allPiece);
+		ai=new AI(allPiece,rules);
 		addListen();
 	}
 	void initEllipse() {
@@ -174,7 +178,7 @@ public class Broad extends JPanel{
 							if(result==2)
 								showYesMessage("红方胜","Game OVer");
 							else if(result==1)
-								showYesMessage("黑方胜","Game OVer");
+								showYesMessage("黑方胜","Game OVer");					
 							return ;
 						}
 					}							
