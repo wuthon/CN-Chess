@@ -71,7 +71,7 @@ public class Rules {
 	}
 	//类似C++的move语句  交换资源控制权而已  
 	void swap(int oldx,int oldy,int newx,int newy) {
-		System.out.println("x:"+oldx+" y:"+oldy+"\t move"+" x"+newx+" y"+newy);
+		System.out.println("x:"+oldx+" y:"+oldy+"\t move"+" x:"+newx+" y:"+newy);
 		allPiece[newx][newy]=allPiece[oldx][oldy];
 		allPiece[oldx][oldy]=null;
 	}
@@ -423,7 +423,7 @@ public class Rules {
 				for(t=plus?t+1:t-1;isNotOutOFBoundaryLine(t);t=plus?t+1:t-1) {
 					if(allPiece[t][a]!=null&&allPiece[t][a].color!=color) {
 						next.add(new Pair(t,a));
-						break;
+						return ;
 					}					
 				}			
 			}
@@ -440,7 +440,7 @@ public class Rules {
 				for(t=plus?t+1:t-1;isNotOutOFBoundaryColumn(t);t=plus?t+1:t-1) {
 					if(allPiece[a][t]!=null&&allPiece[a][t].color!=color) {
 						next.add(new Pair(a,t));
-						break;
+						return ;
 					}					
 				}
 			}
