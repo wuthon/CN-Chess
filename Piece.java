@@ -6,6 +6,7 @@ import java.io.Serializable;
  * @author wuwang
  */
 public class Piece {
+
 	Image image,SImage;//image是未选中的样式 SImage是选中后的样式
 	boolean color=true;//标记颜色 true红 false黑
 	String attr;//棋子角色属性	
@@ -35,6 +36,9 @@ class Step implements Serializable{
 	public Step(Pair arg0,Pair arg1,boolean arg2) {
 		this(arg0,arg1);
 		isCovered=arg2;
+	}
+	public Step(int x1,int y1,int x2,int y2) {
+		this(new Pair(x1,y1),new Pair(x2,y2));
 	}
 	public Pair getFirst() {
 		return first;
@@ -66,5 +70,13 @@ class Pair implements Serializable{
 			return true;
 		else 
 			return false;
+	}
+}
+class GenPair<a,b>{
+	a first;
+	b second;
+	public GenPair(a arg0,b agr1) {
+		first=arg0;
+		second=agr1;
 	}
 }
