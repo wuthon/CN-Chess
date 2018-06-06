@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -33,6 +34,7 @@ class Game extends JFrame{
 	String[] piece=new String[2];
 	ArrayList<String> allBackground=new ArrayList<>();
 	
+	ImageIcon selected=new ImageIcon("/home/wuwang/图片/Material/10.jpg");
 	Broad broad=new Broad();
 	JMenuBar menuBar=new JMenuBar();
 	int ChessIndex=1,PicIndex=1;
@@ -58,7 +60,7 @@ class Game extends JFrame{
 		File file=new File(path);
 		File[] files=file.listFiles();
 		for(File f:files) {
-			if(f.getName().endsWith(".GIF")) 
+			if(f.getName().endsWith(".GIF")||f.getName().endsWith(".jpg")||f.getName().endsWith(".jpeg")) 
 				allBackground.add(f.getPath());
 		}
 		piece[0]="/home/wuwang/Chess/DELICATE/";
@@ -89,6 +91,16 @@ class Game extends JFrame{
 		addItem(fontOf("Retreat"),menu,(e)->{
 			broad.retreat();
 		});
+		JMenuItem item=new JMenuItem(fontOf("Ai"));
+		item.setIcon(selected);
+		item.addActionListener((e)->{
+			if(broad.useAi)
+				item.setIcon(null);
+			else
+				item.setIcon(selected);
+			broad.useAi=!broad.useAi;
+		});
+		menu.add(item);
 		menuBar.add(menu);
 	}
 	void addSkinMenu() {
