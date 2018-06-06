@@ -28,7 +28,7 @@ public class Broad extends JPanel{
 	final static int WIDTH=800,HEIGHT=900;	
 	final static int beginX=20,beginY=25,chessSize=80,interval=85;
 	
-	Image broadBackGround=getImage("/home/wuwang/Chess/SHEET.GIF");
+	Image broadBackGround=getImage("/home/wuwang/Chess/WOOD.GIF");
 	Image pieceBorder=getImage("/home/wuwang/Chess/DELICATE/OOS.GIF");
 /**标记光标移动的有效位置*/
 	Ellipse2D[][] location=new Ellipse2D[10][9];
@@ -38,6 +38,7 @@ public class Broad extends JPanel{
 	Rules rules;
 	
 	AI ai;
+	boolean useAi=true;
 	public Broad() {		
 		setSize(broadBackGround.getWidth(this),broadBackGround.getHeight(this));
 		new Thread(()->initPic("/home/wuwang/Chess/POLISH")).start();
@@ -117,6 +118,7 @@ public class Broad extends JPanel{
 	public void newGame() {
 		rules.retreat(rules.getStepsNum());
 		setUnSelected();
+		ai.index=0;
 		repaint();
 	}
 	public void retreat() {
@@ -174,6 +176,8 @@ public class Broad extends JPanel{
 							rules.move(curX, curY, p.x, p.y);
 							repaint();
 							setUnSelected();
+							if(useAi)
+								next();
 							int result=rules.isWon();
 							if(result==2)
 								showYesMessage("红方胜","Game OVer");
@@ -240,5 +244,11 @@ public class Broad extends JPanel{
 				"<html><b><font size=11>"+str+"</font></b></html>", 
 				title, 
 				JOptionPane.YES_OPTION);
+	}
+	void next() {	
+		Step g=ai.getNext();
+		System.out.printf("black: %d %d move %d %d\n",g.first.x, g.first.y,g.second.x, g.second.y);
+		rules.move(g.first.x, g.first.y,g.second.x, g.second.y);
+		repaint();
 	}
 }
